@@ -1,7 +1,12 @@
 import { initializeApp } from 'firebase/app'
 import {
     getFirestore, collection, getDocs, onSnapshot,
-    addDoc, deleteDoc, doc
+    addDoc, deleteDoc, doc,
+    query, where,
+    orderBy,
+    serverTimestamp,
+    getDoc,
+    updateDoc
 } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -23,6 +28,10 @@ const db = getFirestore()
 
 const colRef = collection(db, 'books')
 
+// queries
+
+const q = query(colRef, orderBy("createdAt"))
+
 // real time get collection data
 // getDocs(colRef)
 //   .then((snapshot) => {
@@ -37,7 +46,7 @@ const colRef = collection(db, 'books')
 //       console.log(err.message)
 //   })
 
-onSnapshot(colRef, (snapshot) => {
+onSnapshot(q, (snapshot) => {
     let books = []
       snapshot.docs.forEach((doc) => {
         books.push({ ...doc.data(), id: doc.id})
@@ -54,6 +63,7 @@ onSnapshot(colRef, (snapshot) => {
       addDoc(colRef, {
           title: addBookForm.title.value,
           author: addBookForm.author.value,
+          createdAt: serverTimestamp()
       })
       .then(() => {
           addBookForm.reset()
@@ -72,4 +82,32 @@ onSnapshot(colRef, (snapshot) => {
             deleteBookForm.reset()
         })
       
+  })
+
+  // get sngle document
+
+  const docRef = doc(db, 'books', 'YxFsYF4DvSJSFxKk4atn')
+
+//   getDoc(docRef)
+//   .then((doc) => {
+//       console.log(doc.data(), doc.id)
+//   })
+
+  onSnapshot(docRef, (doc) => {
+    console.log(doc.data(), doc.id)
+  })
+
+  const updateForm = document.querySelector('.update')
+
+  updateForm.addEventListener('submit', (e) => {
+      e.preventDefault()
+
+      const docRef = doc(db, 'books', updateForm.id.value)
+
+      updateDoc(docRef, {
+          title: 'updated title'
+      })
+      .then(() => {
+          updateForm.reset()
+      })
   })
